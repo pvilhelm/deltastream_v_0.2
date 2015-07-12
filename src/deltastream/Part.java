@@ -48,7 +48,7 @@ public class Part {
         
         _UDPdatagram = new DatagramPacket(_bytebuffer.array(),_bytebuffer.array().length);
         
-        key = (long)frameNr+((long) pkgNr)*65536;
+        key = (long)frameNr+(((long) pkgNr)<<16);
         
          
     }

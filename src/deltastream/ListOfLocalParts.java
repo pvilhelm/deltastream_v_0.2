@@ -7,8 +7,10 @@ package deltastream;
 
 import java.net.DatagramPacket;
 import java.util.BitSet;
+import java.util.Iterator;
  
 import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.TreeMap;
 
 /**
@@ -25,12 +27,7 @@ public class ListOfLocalParts {
         _bitlistParts = new BitSet();
         _tableOfParts = new TreeMap();
     }
-    
-    public synchronized void UpdateBitlistParts(byte[] byteArrayParts, int packageOffset){
-        _bitlistParts = BitSet.valueOf(byteArrayParts);
-        this.packageOffset = packageOffset;
-    }
-    
+        
     public synchronized boolean HasPart(int packageNr){
         boolean hasPart;
         
@@ -53,5 +50,32 @@ public class ListOfLocalParts {
                 _tableOfParts.remove(_tableOfParts.firstKey());//remove oldest part
             }
         }
+        this.UpdateBitlistParts();
+    }
+    
+    public synchronized void UpdateBitlistParts(){
+        //TODO enforce size of field to 1400 or w/e
+        
+        
+        NavigableSet<Long> _keys = _tableOfParts.descendingKeySet();
+        long firstPkgNr = _keys.last()>>>16;
+        long lastPkgNr = _keys.first()>>>16;
+        int pkgSpann = (int)lastPkgNr - (int) firstPkgNr;
+         
+        if(pkgSpann>Deltastream._config.serverPartBufferSize){
+            pkgSpann = Deltastream._config.serverPartBufferSize;
+        }
+        if(pkgSpann < 0){
+            int a = 2;}
+        _bitlistParts = new BitSet(pkgSpann+1);
+         
+        for (Long  key: _keys){
+            long pkgNrTmp = key>>16;
+            if(pkgNrTmp-firstPkgNr <= pkgSpann)
+                if(pkgNrTmp!=lastPkgNr)//TODO make so know its last before next comes!
+                    _bitlistParts.set((int) (pkgNrTmp-firstPkgNr));
+            
+        }
+        byte test[]=_bitlistParts.toByteArray();
     }
 }
